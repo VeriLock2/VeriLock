@@ -1,0 +1,27 @@
+[Unit]
+Description=VeriLock Biometric Door Lock
+StartLimitIntervalSec=60
+StartLimitBurst=10
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=scottritchie
+WorkingDirectory=/home/scottritchie/pi verilock 1
+Environment=DISPLAY=:0
+Environment=GPIOZERO_PIN_FACTORY=lgpio
+Environment=XAUTHORITY=/home/scottritchie/.Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=WAYLAND_DISPLAY=wayland-0
+ExecStart="/home/scottritchie/pi verilock 1/start_verilock.sh"
+
+# Leave VeriLock stopped after an exit; restart it manually after checking the error.
+Restart=no
+
+# Run the normal cleanup steps when systemd stops VeriLock.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=graphical.target

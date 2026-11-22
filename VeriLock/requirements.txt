@@ -1,0 +1,6 @@
+# VeriLock Pi Version 1
+# Target: Raspberry Pi OS Trixie, CPython 3.13, ARM64/aarch64.
+# Use this with requirements-pi.lock from the working Pi.
+# Install the camera, GPIO, and Tk packages through Raspberry Pi OS.
+# Use opencv-python-headless; Tkinter displays the camera previews.
+-r requirements-pi.lock

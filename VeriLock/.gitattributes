@@ -1,0 +1,5 @@
+* text=auto
+*.sh text eol=lf
+*.service text eol=lf
+VeriLock-sbom.cdx.json -text
+VeriLock-SBOM-Public-Key.pem -text

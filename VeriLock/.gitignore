@@ -1,0 +1,21 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.env
+.env.*
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite*
+*.log
+*.onnx
+*.backup-*
+private.key
+*private*.pem
+*.key
+/-- SQLite.sql

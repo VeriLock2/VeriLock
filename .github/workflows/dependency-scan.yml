@@ -1,0 +1,59 @@
+name: VeriLock Dependency Inventory and Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - VeriLock/requirements-pi.lock
+      - VeriLock/VeriLock-sbom.cdx.json
+      - .github/workflows/dependency-scan.yml
+  pull_request:
+    paths:
+      - VeriLock/requirements-pi.lock
+      - VeriLock/VeriLock-sbom.cdx.json
+      - .github/workflows/dependency-scan.yml
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Generate Python dependency SBOM
+        run: |
+          mkdir -p scan-output
+          python3 -m venv "$RUNNER_TEMP/cyclonedx"
+          "$RUNNER_TEMP/cyclonedx/bin/python" -m pip install cyclonedx-bom==9.0.0
+          "$RUNNER_TEMP/cyclonedx/bin/cyclonedx-py" requirements \
+            VeriLock/requirements-pi.lock --output-reproducible --sv 1.6 \
+            -o scan-output/VeriLock-Python.cdx.json
+
+      - name: Install Grype
+        run: |
+          archive="$RUNNER_TEMP/grype.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/anchore/grype/releases/download/v0.122.1/grype_0.122.1_linux_amd64.tar.gz \
+            --output "$archive"
+          printf '%s  %s\n' f1ba7e2917ee1395618de20a98da0aa7c0fb1788927797651047c50502a37538 "$archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP" grype
+
+      - name: Scan the lockfile inventory and signed release inventory
+        run: |
+          "$RUNNER_TEMP/grype" sbom:scan-output/VeriLock-Python.cdx.json \
+            -o json --file scan-output/VeriLock-Python-Scan.json
+          GRYPE_DB_AUTO_UPDATE=false "$RUNNER_TEMP/grype" sbom:VeriLock/VeriLock-sbom.cdx.json \
+            --distro debian:13 -o json --file scan-output/VeriLock-Release-Scan.json
+
+      - name: Save SBOM and scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: verilock-dependency-inventory-and-scan
+          path: scan-output/
+          if-no-files-found: error
